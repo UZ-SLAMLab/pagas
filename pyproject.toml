@@ -1,0 +1,37 @@
+# License: CC BY-NC 4.0 - see /LICENSE
+[build-system]
+requires = ["setuptools>=61.0","wheel","torch"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pagas"
+version = "1.0.0"
+authors = [
+  { name="David Recasens"},
+  { name="Robert Maier"},
+  { name="Aljaz Bozic"},
+  { name="Stephane Grabli"},
+  { name="Javier Civera"},
+  { name="Tony Tung"},
+  { name="Edmond Boyer"},
+]
+description = "PAGaS: Pixel-Aligned 1DoF Gaussian Splatting for Depth Refinement"
+readme = "README.md"
+requires-python = ">=3.10" 
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dynamic = ["dependencies", "optional-dependencies"]
+
+[project.urls]
+Homepage = "https://davidrecasens.github.io/pagas/"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pagas"]
+exclude = []
+namespaces = false
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }

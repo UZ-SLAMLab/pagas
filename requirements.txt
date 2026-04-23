@@ -1,0 +1,17 @@
+# License: CC BY-NC 4.0 - see /LICENSE
+numpy<2.0    # Open3D <=0.18 requires numpy<2.0
+pycolmap==0.6.1
+open3d==0.18.0
+imageio
+matplotlib
+opencv-python
+Pillow
+tqdm
+tyro
+colorama
+trimesh
+scikit-learn
+scikit-image # to evaluate DTU
+pyyaml
+onnxruntime  # to get masks
+rembg[cli]   # to get masks

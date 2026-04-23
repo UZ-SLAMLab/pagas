@@ -1,0 +1,865 @@
+﻿# License: CC BY-NC 4.0 - see /LICENSE
+diff --git a/README.md b/README.md
+index c4186c2..4bfc4f2 100644
+--- a/README.md
++++ b/README.md
+@@ -1,92 +1,8 @@
+-# gsplat
+ 
+-[![Core Tests.](https://github.com/nerfstudio-project/gsplat/actions/workflows/core_tests.yml/badge.svg?branch=main)](https://github.com/nerfstudio-project/gsplat/actions/workflows/core_tests.yml)
+-[![Docs](https://github.com/nerfstudio-project/gsplat/actions/workflows/doc.yml/badge.svg?branch=main)](https://github.com/nerfstudio-project/gsplat/actions/workflows/doc.yml)
++# Occlusion-Aware 3DGS Rasterizer
+ 
+-[http://www.gsplat.studio/](http://www.gsplat.studio/)
++Based on gsplat 1.4.0. Now the 3DGS rasterization function admits these inputs:
+ 
+-gsplat is an open-source library for CUDA accelerated rasterization of gaussians with python bindings. It is inspired by the SIGGRAPH paper [3D Gaussian Splatting for Real-Time Rendering of Radiance Fields](https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/), but weΓÇÖve made gsplat even faster, more memory efficient, and with a growing list of new features! 
+-
+-<div align="center">
+-  <video src="https://github.com/nerfstudio-project/gsplat/assets/10151885/64c2e9ca-a9a6-4c7e-8d6f-47eeacd15159" width="100%" />
+-</div>
+-
+-## Installation
+-
+-**Dependence**: Please install [Pytorch](https://pytorch.org/get-started/locally/) first.
+-
+-The easiest way is to install from PyPI. In this way it will build the CUDA code **on the first run** (JIT).
+-
+-```bash
+-pip install gsplat
+-```
+-
+-Alternatively you can install gsplat from source. In this way it will build the CUDA code during installation.
+-
+-```bash
+-pip install git+https://github.com/nerfstudio-project/gsplat.git
+-```
+-
+-We also provide [pre-compiled wheels](https://docs.gsplat.studio/whl) for both linux and windows on certain python-torch-CUDA combinations (please check first which versions are supported). Note this way you would have to manually install [gsplat's dependencies](https://github.com/nerfstudio-project/gsplat/blob/6022cf45a19ee307803aaf1f19d407befad2a033/setup.py#L115). For example, to install gsplat for pytorch 2.0 and cuda 11.8 you can run
+-```
+-pip install ninja numpy jaxtyping rich
+-pip install gsplat --index-url https://docs.gsplat.studio/whl/pt20cu118
+-```
+-
+-To build gsplat from source on Windows, please check [this instruction](docs/INSTALL_WIN.md).
+-
+-## Evaluation
+-
+-This repo comes with a standalone script that reproduces the official Gaussian Splatting with exactly the same performance on PSNR, SSIM, LPIPS, and converged number of Gaussians. Powered by gsplatΓÇÖs efficient CUDA implementation, the training takes up to **4x less GPU memory** with up to **15% less time** to finish than the official implementation. Full report can be found [here](https://docs.gsplat.studio/main/tests/eval.html).
+-
+-```bash
+-cd examples
+-pip install -r requirements.txt
+-# download mipnerf_360 benchmark data
+-python datasets/download_dataset.py
+-# run batch evaluation
+-bash benchmarks/basic.sh
+-```
+-
+-## Examples
+-
+-We provide a set of examples to get you started! Below you can find the details about
+-the examples (requires to install some exta dependencies via `pip install -r examples/requirements.txt`)
+-
+-- [Train a 3D Gaussian splatting model on a COLMAP capture.](https://docs.gsplat.studio/main/examples/colmap.html)
+-- [Fit a 2D image with 3D Gaussians.](https://docs.gsplat.studio/main/examples/image.html)
+-- [Render a large scene in real-time.](https://docs.gsplat.studio/main/examples/large_scale.html)
+-
+-
+-## Development and Contribution
+-
+-This repository was born from the curiosity of people on the Nerfstudio team trying to understand a new rendering technique. We welcome contributions of any kind and are open to feedback, bug-reports, and improvements to help expand the capabilities of this software.
+-
+-This project is developed by the following wonderful contributors (unordered):
+-
+-- [Angjoo Kanazawa](https://people.eecs.berkeley.edu/~kanazawa/) (UC Berkeley): Mentor of the project.
+-- [Matthew Tancik](https://www.matthewtancik.com/about-me) (Luma AI): Mentor of the project.
+-- [Vickie Ye](https://people.eecs.berkeley.edu/~vye/) (UC Berkeley): Project lead. v0.1 lead.
+-- [Matias Turkulainen](https://maturk.github.io/) (Aalto University): Core developer.
+-- [Ruilong Li](https://www.liruilong.cn/) (UC Berkeley): Core developer. v1.0 lead.
+-- [Justin Kerr](https://kerrj.github.io/) (UC Berkeley): Core developer.
+-- [Brent Yi](https://github.com/brentyi) (UC Berkeley): Core developer.
+-- [Zhuoyang Pan](https://panzhy.com/) (ShanghaiTech University): Core developer.
+-- [Jianbo Ye](http://www.jianboye.org/) (Amazon): Core developer.
+-
+-We also have a white paper with about the project with benchmarking and mathematical supplement with conventions and derivations, available [here](https://arxiv.org/abs/2409.06765). If you find this library useful in your projects or papers, please consider citing:
+-
+-```
+-@article{ye2024gsplatopensourcelibrarygaussian,
+-    title={gsplat: An Open-Source Library for {Gaussian} Splatting}, 
+-    author={Vickie Ye and Ruilong Li and Justin Kerr and Matias Turkulainen and Brent Yi and Zhuoyang Pan and Otto Seiskari and Jianbo Ye and Jeffrey Hu and Matthew Tancik and Angjoo Kanazawa},
+-    year={2024},
+-    eprint={2409.06765},
+-    journal={arXiv preprint arXiv:2409.06765},
+-    archivePrefix={arXiv},
+-    primaryClass={cs.CV},
+-    url={https://arxiv.org/abs/2409.06765}, 
+-}
+-```
+-
+-We welcome contributions of any kind and are open to feedback, bug-reports, and improvements to help expand the capabilities of this software. Please check [docs/DEV.md](docs/DEV.md) for more info about development.
++- **radius_thres**: pixel is only influence by gaussians that fall inside this maximum radius (in pixel units) around its center. Distance from center to corner is 0.71, so it is a recommended minimum. If context views are far from target view, there can appear areas with low gaussians density, and then if some pixels/gaussians of the target view should be occluded, a higher threshold is needed to block them in the rendering, e.g. 1.42 or more.
++- **depth_thres**: this depth is sum up to the depth of the first gaussian that falls inside the pixel area of influence set by radius_thres. Only the gaussians that fall inside radius_thres and this depth range influence the pixel rendering. Therefore, Gaussians that fall inside the radius_thres but have a further depth value are ignored. The alpha of the pixel is computed using only the Gaussians in this valid range. Depth is in the input scene scale units.
++- **opacities**: now can be view depentant [#views, #gauss] or not [#gauss].
+diff --git a/gsplat/cuda/_torch_impl.py b/gsplat/cuda/_torch_impl.py
+index 892c6a6..a4ae1be 100644
+--- a/gsplat/cuda/_torch_impl.py
++++ b/gsplat/cuda/_torch_impl.py
+@@ -529,6 +529,7 @@ def _rasterize_to_pixels(
+     tile_size: int,
+     isect_offsets: Tensor,  # [C, tile_height, tile_width]
+     flatten_ids: Tensor,  # [n_isects]
++    radius_thres: float,
+     backgrounds: Optional[Tensor] = None,  # [C, channels]
+     batch_per_iter: int = 100,
+ ):
+diff --git a/gsplat/cuda/_wrapper.py b/gsplat/cuda/_wrapper.py
+index 1d11678..f915b76 100644
+--- a/gsplat/cuda/_wrapper.py
++++ b/gsplat/cuda/_wrapper.py
+@@ -443,6 +443,9 @@ def rasterize_to_pixels(
+     tile_size: int,
+     isect_offsets: Tensor,  # [C, tile_height, tile_width]
+     flatten_ids: Tensor,  # [n_isects]
++    depths: Tensor,  # [C, N] or [nnz]
++    depth_thres: float = 1e10,
++    radius_thres: float = 1e10,
+     backgrounds: Optional[Tensor] = None,  # [C, channels]
+     masks: Optional[Tensor] = None,  # [C, tile_height, tile_width]
+     packed: bool = False,
+@@ -480,12 +483,14 @@ def rasterize_to_pixels(
+         assert conics.shape == (nnz, 3), conics.shape
+         assert colors.shape[0] == nnz, colors.shape
+         assert opacities.shape == (nnz,), opacities.shape
++        assert depths.shape == (nnz,), depths.shape
+     else:
+         N = means2d.size(1)
+         assert means2d.shape == (C, N, 2), means2d.shape
+         assert conics.shape == (C, N, 3), conics.shape
+         assert colors.shape[:2] == (C, N), colors.shape
+         assert opacities.shape == (C, N), opacities.shape
++        assert depths.shape == (C, N), depths.shape
+     if backgrounds is not None:
+         assert backgrounds.shape == (C, colors.shape[-1]), backgrounds.shape
+         backgrounds = backgrounds.contiguous()
+@@ -560,6 +565,9 @@ def rasterize_to_pixels(
+         tile_size,
+         isect_offsets.contiguous(),
+         flatten_ids.contiguous(),
++        depths,
++        depth_thres,
++        radius_thres,
+         absgrad,
+     )
+ 
+@@ -915,6 +923,9 @@ class _RasterizeToPixels(torch.autograd.Function):
+         tile_size: int,
+         isect_offsets: Tensor,  # [C, tile_height, tile_width]
+         flatten_ids: Tensor,  # [n_isects]
++        depths: Tensor, # [C, N]
++        depth_thres: float ,
++        radius_thres: float,
+         absgrad: bool,
+     ) -> Tuple[Tensor, Tensor]:
+         render_colors, render_alphas, last_ids = _make_lazy_cuda_func(
+@@ -931,6 +942,9 @@ class _RasterizeToPixels(torch.autograd.Function):
+             tile_size,
+             isect_offsets,
+             flatten_ids,
++            depths,
++            depth_thres,
++            radius_thres,
+         )
+ 
+         ctx.save_for_backward(
+@@ -945,6 +959,7 @@ class _RasterizeToPixels(torch.autograd.Function):
+             render_alphas,
+             last_ids,
+         )
++        ctx.radius_thres = radius_thres
+         ctx.width = width
+         ctx.height = height
+         ctx.tile_size = tile_size
+@@ -972,6 +987,7 @@ class _RasterizeToPixels(torch.autograd.Function):
+             render_alphas,
+             last_ids,
+         ) = ctx.saved_tensors
++        radius_thres = ctx.radius_thres
+         width = ctx.width
+         height = ctx.height
+         tile_size = ctx.tile_size
+@@ -995,6 +1011,7 @@ class _RasterizeToPixels(torch.autograd.Function):
+             tile_size,
+             isect_offsets,
+             flatten_ids,
++            radius_thres,
+             render_alphas,
+             last_ids,
+             v_render_colors.contiguous(),
+@@ -1025,6 +1042,9 @@ class _RasterizeToPixels(torch.autograd.Function):
+             None,
+             None,
+             None,
++            None,
++            None,
++            None
+         )
+ 
+ 
+diff --git a/gsplat/cuda/csrc/rasterize_to_indices_in_range.cu b/gsplat/cuda/csrc/rasterize_to_indices_in_range.cu
+index 895699c..4547529 100644
+--- a/gsplat/cuda/csrc/rasterize_to_indices_in_range.cu
++++ b/gsplat/cuda/csrc/rasterize_to_indices_in_range.cu
+@@ -107,7 +107,7 @@ __global__ void rasterize_to_indices_in_range_kernel(
+     uint32_t tr = block.thread_rank();
+ 
+     int32_t cnt = 0;
+-    for (uint32_t b = range_start; b < min(range_end, num_batches); ++b) {
++    for (uint32_t b = range_start; b < min(range_end, num_batches); ++b) {  // TODO:
+         // resync all threads before beginning next batch
+         // end early if entire tile is done
+         if (__syncthreads_count(done) >= block_size) {
+@@ -298,4 +298,4 @@ std::tuple<torch::Tensor, torch::Tensor> rasterize_to_indices_in_range_tensor(
+     return std::make_tuple(gaussian_ids, pixel_ids);
+ }
+ 
+-} // namespace gsplat
+\ No newline at end of file
++} // namespace gsplat
+diff --git a/gsplat/cuda/csrc/rasterize_to_pixels_2dgs_bwd.cu b/gsplat/cuda/csrc/rasterize_to_pixels_2dgs_bwd.cu
+index eb61c62..c8d3a89 100644
+--- a/gsplat/cuda/csrc/rasterize_to_pixels_2dgs_bwd.cu
++++ b/gsplat/cuda/csrc/rasterize_to_pixels_2dgs_bwd.cu
+@@ -41,7 +41,7 @@ __global__ void rasterize_to_pixels_bwd_2dgs_kernel(
+     const S *__restrict__ render_colors,    // [C, image_height, image_width,
+                                             // COLOR_DIM]
+     const S *__restrict__ render_alphas,    // [C, image_height, image_width, 1]
+-    const int32_t *__restrict__ last_ids,   // [C, image_height, image_width]     // the id to last gaussian that got intersected 
++    const int32_t *__restrict__ last_ids,   // [C, image_height, image_width]     // the id to last gaussian that got intersected
+     const int32_t *__restrict__ median_ids, // [C, image_height, image_width]     // the id to the gaussian that brings the opacity over 0.5
+ 
+     // grad outputs
+@@ -75,7 +75,7 @@ __global__ void rasterize_to_pixels_bwd_2dgs_kernel(
+ 
+     tile_offsets += camera_id * tile_height * tile_width;
+     render_alphas += camera_id * image_height * image_width;
+-    
++
+     last_ids += camera_id * image_height * image_width;
+     median_ids += camera_id * image_height * image_width;
+ 
+@@ -212,7 +212,7 @@ __global__ void rasterize_to_pixels_bwd_2dgs_kernel(
+      * Calculating Derivatives
+      * =======================================================
+      */
+-     // loop over all batches of primitives 
++     // loop over all batches of primitives
+     for (uint32_t b = 0; b < num_batches; ++b) {
+         // resync all threads before writing next batch of shared mem
+         block.sync();
+@@ -287,7 +287,7 @@ __global__ void rasterize_to_pixels_bwd_2dgs_kernel(
+             S opac;     // opacity of the currently processed gaussian, per pixel
+             S vis;      // visibility of the currently processed gaussian (the pure gaussian weight, not multiplied by opacity), per pixel
+             S gauss_weight_3d;    // 3D gaussian weight (using the proper intersection of UV space), per pixel
+-            S gauss_weight_2d;    // 2D gaussian weight (using the projected 2D mean), per pixel    
++            S gauss_weight_2d;    // 2D gaussian weight (using the projected 2D mean), per pixel
+             S gauss_weight;        // minimum of 3D and 2D gaussian weights, per pixel
+ 
+             vec2<S> s;      // normalized point of intersection on the uv, per pixel
+@@ -296,7 +296,7 @@ __global__ void rasterize_to_pixels_bwd_2dgs_kernel(
+             vec3<S> h_v;    // homogeneous plane parameter for vs, per pixel
+             vec3<S> ray_cross;    // ray cross product, the ray of plane intersection, per pixel
+             vec3<S> w_M;    // depth component of the ray transform matrix, per pixel
+-            
++
+             /**
+              * ==================================================
+              * Run through the forward pass, but only for the t-th primitive
+@@ -309,7 +309,7 @@ __global__ void rasterize_to_pixels_bwd_2dgs_kernel(
+ 
+                 const vec3<S> u_M = u_Ms_batch[t];
+                 const vec3<S> v_M = v_Ms_batch[t];
+-                
++
+                 w_M = w_Ms_batch[t];
+ 
+                 h_u = px * w_M - u_M;
+@@ -363,10 +363,10 @@ __global__ void rasterize_to_pixels_bwd_2dgs_kernel(
+             vec3<S> v_u_M_local = {0.f, 0.f, 0.f};
+             vec3<S> v_v_M_local = {0.f, 0.f, 0.f};
+             vec3<S> v_w_M_local = {0.f, 0.f, 0.f};
+-            
++
+             // 2D mean gradients, used if 2d gaussian weight is applied
+             vec2<S> v_xy_local = {0.f, 0.f};
+-            
++
+             // absolute 2D mean gradients, used if 2d gaussian weight is applied
+             vec2<S> v_xy_abs_local = {0.f, 0.f};
+ 
+@@ -820,7 +820,7 @@ rasterize_to_pixels_bwd_2dgs_tensor(
+     case N:                                                                    \
+         return call_kernel_with_dim<N>(                                        \
+             means2d,                                                           \
+-            ray_transforms,                                                            \
++            ray_transforms,                                                    \
+             colors,                                                            \
+             opacities,                                                         \
+             normals,                                                           \
+@@ -869,4 +869,4 @@ rasterize_to_pixels_bwd_2dgs_tensor(
+     }
+ }
+ 
+-} // namespace gsplat
+\ No newline at end of file
++} // namespace gsplat
+diff --git a/gsplat/cuda/csrc/rasterize_to_pixels_2dgs_fwd.cu b/gsplat/cuda/csrc/rasterize_to_pixels_2dgs_fwd.cu
+index e164162..2d6ae5f 100644
+--- a/gsplat/cuda/csrc/rasterize_to_pixels_2dgs_fwd.cu
++++ b/gsplat/cuda/csrc/rasterize_to_pixels_2dgs_fwd.cu
+@@ -38,8 +38,8 @@ __global__ void rasterize_to_pixels_fwd_2dgs_kernel(
+     const int32_t *__restrict__ tile_offsets, // [C, tile_height, tile_width]    // Intersection offsets outputs from `isect_offset_encode()`, this is the result of a prefix sum, and
+                                                                                  // gives the interval that our gaussians are gonna use.
+     const int32_t *__restrict__ flatten_ids,  // [n_isects]                      // The global flatten indices in [C * N] or [nnz] from  `isect_tiles()`.
+-    
+-    
++
++
+     // outputs
+     S *__restrict__ render_colors,  // [C, image_height, image_width, COLOR_DIM]
+     S *__restrict__ render_alphas,  // [C, image_height, image_width, 1]
+@@ -108,7 +108,7 @@ __global__ void rasterize_to_pixels_fwd_2dgs_kernel(
+     // first collect gaussians between range.x and range.y in batches
+     // which gaussians to look through in this tile
+ 
+-    // print 
++    // print
+     int32_t range_start = tile_offsets[tile_id];
+     int32_t range_end =
+         // see if this is the last tile in the camera
+@@ -123,7 +123,7 @@ __global__ void rasterize_to_pixels_fwd_2dgs_kernel(
+      * ==============================
+      * Register computing variables:
+      * For each pixel, we need to find its uv intersection with the gaussian primitives.
+-     * then we retrieve the kernel's parameters and kernel weights 
++     * then we retrieve the kernel's parameters and kernel weights
+      * do the splatting rendering equation.
+      * ==============================
+      */
+@@ -154,7 +154,7 @@ __global__ void rasterize_to_pixels_fwd_2dgs_kernel(
+     // collect and process batches of gaussians
+     // each thread loads one gaussian at a time before rasterizing its
+     // designated pixel
+-    uint32_t tr = block.thread_rank();  
++    uint32_t tr = block.thread_rank();
+ 
+     // Per-pixel distortion error proposed in Mip-NeRF 360.
+     // Implemented reference:
+@@ -218,21 +218,21 @@ __global__ void rasterize_to_pixels_fwd_2dgs_kernel(
+          * ==================================================
+          * Forward rasterization pass:
+          * ==================================================
+-         * 
++         *
+          * GSplat computes rasterization point of intersection as:
+          * 1. Generate 2 homogeneous plane parameter vectors as sets of points in UV space
+          * 2. Find the set of points that satisfy both conditions with the cross product
+          * 3. Find where this solution set intersects with UV plane using projective flattening
+-         * 
++         *
+          * For each gaussian G_i and pixel q_xy:
+-         * 
++         *
+          * 1. Compute homogeneous plane parameters:
+          *    h_u = p_x * M_w - M_u
+          *    h_v = p_y * M_w - M_v
+          *    where M_u, M_v, M_w are rows of the KWH transform
+          *
+          * Note: this works because:
+-         *    for any vector q_uv [u, v, 1], applying co-vector h_u will yield the following expression: 
++         *    for any vector q_uv [u, v, 1], applying co-vector h_u will yield the following expression:
+          *    h_u * [u, v, 1]^T = P_x * (M_w * q_uv) - M_u * q_uv
+          *                      = P_x * q_ray.z - q_ray.x * q_ray.z
+          *    - where P_x is the x-coordinate of the ray origin
+@@ -242,19 +242,19 @@ __global__ void rasterize_to_pixels_fwd_2dgs_kernel(
+          * 2. Compute intersection:
+          *    zeta = h_u ├ù h_v
+          *    This cross product is the only solution that satisfies both homogeneous plane equations (dot product == 0)
+-         * 
++         *
+          * 3. Project to UV space:
+          *    s_uv = [zeta_1/zeta_3, zeta_2/zeta_3]
+          *    - since UV space is essentially another ray space, and arbitrary scale of q_uv will not change the result of dot product over orthogonality
+          *    - thus, the result is the point of intersection in UV space
+-         * 
++         *
+          * 4. Evaluate gaussian kernel:
+          *    G_i = exp(-(s_u^2 + s_v^2)/2)
+-         * 
++         *
+          * 5. Accumulate color:
+          *    p_xy += alpha_i * c_i * G_i * prod(1 - alpha_j * G_j)
+-         * 
+-         * This method efficiently computes the point of intersection and 
++         *
++         * This method efficiently computes the point of intersection and
+          * evaluates the gaussian kernel in UV space.
+          * Note: in some cases, we use the minimum of ray-intersection kernels and 2D projected gaussian kernels
+          */
+@@ -283,12 +283,12 @@ __global__ void rasterize_to_pixels_fwd_2dgs_kernel(
+ 
+             // point of interseciton in uv space
+             const S gauss_weight_3d = s.x * s.x + s.y * s.y;
+-            
++
+             // projected gaussian kernel
+             const vec2<S> d = {xy_opac.x - px, xy_opac.y - py};
+             // #define FILTER_INV_SQUARE 2.0f
+             const S gauss_weight_2d = FILTER_INV_SQUARE * (d.x * d.x + d.y * d.y);
+-            
++
+             // merge ray-intersection kernel and 2d gaussian kernel
+             const S gauss_weight = min(gauss_weight_3d, gauss_weight_2d);
+ 
+@@ -553,7 +553,7 @@ rasterize_to_pixels_fwd_2dgs_tensor(
+     case N:                                                                    \
+         return call_kernel_with_dim<N>(                                        \
+             means2d,                                                           \
+-            ray_transforms,                                                            \
++            ray_transforms,                                                     \
+             colors,                                                            \
+             opacities,                                                         \
+             normals,                                                           \
+@@ -593,4 +593,4 @@ rasterize_to_pixels_fwd_2dgs_tensor(
+     }
+ }
+ 
+-} // namespace gsplat
+\ No newline at end of file
++} // namespace gsplat
+diff --git a/gsplat/cuda/csrc/rasterize_to_pixels_bwd.cu b/gsplat/cuda/csrc/rasterize_to_pixels_bwd.cu
+index 70882dc..3beada8 100644
+--- a/gsplat/cuda/csrc/rasterize_to_pixels_bwd.cu
++++ b/gsplat/cuda/csrc/rasterize_to_pixels_bwd.cu
+@@ -33,6 +33,7 @@ __global__ void rasterize_to_pixels_bwd_kernel(
+     const uint32_t tile_height,
+     const int32_t *__restrict__ tile_offsets, // [C, tile_height, tile_width]
+     const int32_t *__restrict__ flatten_ids,  // [n_isects]
++    const float radius_thres,
+     // fwd outputs
+     const S *__restrict__ render_alphas,  // [C, image_height, image_width, 1]
+     const int32_t *__restrict__ last_ids, // [C, image_height, image_width]
+@@ -159,6 +160,7 @@ __global__ void rasterize_to_pixels_bwd_kernel(
+                 valid = 0;
+             }
+             S alpha;
++            S radius;
+             S opac;
+             vec2<S> delta;
+             vec3<S> conic;
+@@ -174,7 +176,13 @@ __global__ void rasterize_to_pixels_bwd_kernel(
+                           conic.y * delta.x * delta.y;
+                 vis = __expf(-sigma);
+                 alpha = min(0.999f, opac * vis);
+-                if (sigma < 0.f || alpha < 1.f / 255.f) {
++
++                radius = sqrt(delta.x * delta.x + delta.y * delta.y);
++                if (radius > radius_thres) {
++                    valid = false;
++                }
++
++                if (sigma < 0.f || alpha < 1.f / 255.f) { 
+                     valid = false;
+                 }
+             }
+@@ -298,6 +306,7 @@ call_kernel_with_dim(
+     // intersections
+     const torch::Tensor &tile_offsets, // [C, tile_height, tile_width]
+     const torch::Tensor &flatten_ids,  // [n_isects]
++    const float radius_thres,
+     // forward outputs
+     const torch::Tensor &render_alphas, // [C, image_height, image_width, 1]
+     const torch::Tensor &last_ids,      // [C, image_height, image_width]
+@@ -387,6 +396,7 @@ call_kernel_with_dim(
+                 tile_height,
+                 tile_offsets.data_ptr<int32_t>(),
+                 flatten_ids.data_ptr<int32_t>(),
++                radius_thres,
+                 render_alphas.data_ptr<float>(),
+                 last_ids.data_ptr<int32_t>(),
+                 v_render_colors.data_ptr<float>(),
+@@ -428,6 +438,7 @@ rasterize_to_pixels_bwd_tensor(
+     // intersections
+     const torch::Tensor &tile_offsets, // [C, tile_height, tile_width]
+     const torch::Tensor &flatten_ids,  // [n_isects]
++    const float radius_thres,
+     // forward outputs
+     const torch::Tensor &render_alphas, // [C, image_height, image_width, 1]
+     const torch::Tensor &last_ids,      // [C, image_height, image_width]
+@@ -455,6 +466,7 @@ rasterize_to_pixels_bwd_tensor(
+             tile_size,                                                         \
+             tile_offsets,                                                      \
+             flatten_ids,                                                       \
++            radius_thres,                                                      \
+             render_alphas,                                                     \
+             last_ids,                                                          \
+             v_render_colors,                                                   \
+@@ -487,4 +499,4 @@ rasterize_to_pixels_bwd_tensor(
+     }
+ }
+ 
+-} // namespace gsplat
+\ No newline at end of file
++} // namespace gsplat
+diff --git a/gsplat/cuda/csrc/rasterize_to_pixels_fwd.cu b/gsplat/cuda/csrc/rasterize_to_pixels_fwd.cu
+index d1c3234..699d3b7 100644
+--- a/gsplat/cuda/csrc/rasterize_to_pixels_fwd.cu
++++ b/gsplat/cuda/csrc/rasterize_to_pixels_fwd.cu
+@@ -31,6 +31,9 @@ __global__ void rasterize_to_pixels_fwd_kernel(
+     const uint32_t tile_height,
+     const int32_t *__restrict__ tile_offsets, // [C, tile_height, tile_width]
+     const int32_t *__restrict__ flatten_ids,  // [n_isects]
++    const S *__restrict__ depths,
++    const float depth_thres,
++    const float radius_thres,
+     S *__restrict__ render_colors, // [C, image_height, image_width, COLOR_DIM]
+     S *__restrict__ render_alphas, // [C, image_height, image_width, 1]
+     int32_t *__restrict__ last_ids // [C, image_height, image_width]
+@@ -94,6 +97,8 @@ __global__ void rasterize_to_pixels_fwd_kernel(
+     vec3<S> *conic_batch =
+         reinterpret_cast<vec3<float> *>(&xy_opacity_batch[block_size]
+         ); // [block_size]
++    vec3<S> *xy_depth_batch =
++        reinterpret_cast<vec3<float> *>(&conic_batch[block_size]); // [block_size]
+ 
+     // current visibility left to render
+     // transmittance is gonna be used in the backward pass which requires a high
+@@ -103,6 +108,9 @@ __global__ void rasterize_to_pixels_fwd_kernel(
+     // index of most recent gaussian to write to this thread's pixel
+     uint32_t cur_idx = 0;
+ 
++    // Initialization of max depth a Gaussian can have to influence a pixel
++    S max_depth = 0.f;
++
+     // collect and process batches of gaussians
+     // each thread loads one gaussian at a time before rasterizing its
+     // designated pixel
+@@ -127,6 +135,8 @@ __global__ void rasterize_to_pixels_fwd_kernel(
+             const S opac = opacities[g];
+             xy_opacity_batch[tr] = {xy.x, xy.y, opac};
+             conic_batch[tr] = conics[g];
++            const S dep = depths[g];
++            xy_depth_batch[tr] = {xy.x, xy.y, dep};
+         }
+ 
+         // wait for other threads to collect the gaussians in batch
+@@ -139,14 +149,32 @@ __global__ void rasterize_to_pixels_fwd_kernel(
+             const vec3<S> xy_opac = xy_opacity_batch[t];
+             const S opac = xy_opac.z;
+             const vec2<S> delta = {xy_opac.x - px, xy_opac.y - py};
++
++            const S radius = sqrt(delta.x * delta.x + delta.y * delta.y);
++
++            if (radius > radius_thres) {
++                continue;
++            }
++
+             const S sigma = 0.5f * (conic.x * delta.x * delta.x +
+                                     conic.z * delta.y * delta.y) +
+                             conic.y * delta.x * delta.y;
++
+             S alpha = min(0.999f, opac * __expf(-sigma));
+             if (sigma < 0.f || alpha < 1.f / 255.f) {
+                 continue;
+             }
+ 
++            const vec3<S> xy_dep = xy_depth_batch[t];
++            const S depth = xy_dep.z;
++
++            if (max_depth == 0.f && depth > 0.f) {
++                max_depth = depth + depth_thres;
++            } else if (depth > max_depth) {
++                done = true;
++                break;
++            }
++
+             const S next_T = T * (1.0f - alpha);
+             if (next_T <= 1e-4) { // this pixel is done: exclusive
+                 done = true;
+@@ -163,6 +191,7 @@ __global__ void rasterize_to_pixels_fwd_kernel(
+             cur_idx = batch_start + t;
+ 
+             T = next_T;
++
+         }
+     }
+ 
+@@ -199,7 +228,10 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> call_kernel_with_dim(
+     const uint32_t tile_size,
+     // intersections
+     const torch::Tensor &tile_offsets, // [C, tile_height, tile_width]
+-    const torch::Tensor &flatten_ids   // [n_isects]
++    const torch::Tensor &flatten_ids,   // [n_isects]
++    const torch::Tensor &depths,   // [C, N]
++    const float depth_thres,
++    const float radius_thres
+ ) {
+     GSPLAT_DEVICE_GUARD(means2d);
+     GSPLAT_CHECK_INPUT(means2d);
+@@ -208,6 +240,7 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> call_kernel_with_dim(
+     GSPLAT_CHECK_INPUT(opacities);
+     GSPLAT_CHECK_INPUT(tile_offsets);
+     GSPLAT_CHECK_INPUT(flatten_ids);
++    GSPLAT_CHECK_INPUT(depths);
+     if (backgrounds.has_value()) {
+         GSPLAT_CHECK_INPUT(backgrounds.value());
+     }
+@@ -243,7 +276,7 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> call_kernel_with_dim(
+     at::cuda::CUDAStream stream = at::cuda::getCurrentCUDAStream();
+     const uint32_t shared_mem =
+         tile_size * tile_size *
+-        (sizeof(int32_t) + sizeof(vec3<float>) + sizeof(vec3<float>));
++        (sizeof(int32_t) + sizeof(vec3<float>) + sizeof(vec3<float>) + sizeof(vec3<float>));   // TODO:
+ 
+     // TODO: an optimization can be done by passing the actual number of
+     // channels into the kernel functions and avoid necessary global memory
+@@ -279,6 +312,9 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> call_kernel_with_dim(
+             tile_height,
+             tile_offsets.data_ptr<int32_t>(),
+             flatten_ids.data_ptr<int32_t>(),
++            depths.data_ptr<float>(),
++            depth_thres,
++            radius_thres,
+             renders.data_ptr<float>(),
+             alphas.data_ptr<float>(),
+             last_ids.data_ptr<int32_t>()
+@@ -302,7 +338,10 @@ rasterize_to_pixels_fwd_tensor(
+     const uint32_t tile_size,
+     // intersections
+     const torch::Tensor &tile_offsets, // [C, tile_height, tile_width]
+-    const torch::Tensor &flatten_ids   // [n_isects]
++    const torch::Tensor &flatten_ids,   // [n_isects]
++    const torch::Tensor &depths,   // [C, N]
++    const float depth_thres,
++    const float radius_thres
+ ) {
+     GSPLAT_CHECK_INPUT(colors);
+     uint32_t channels = colors.size(-1);
+@@ -320,7 +359,10 @@ rasterize_to_pixels_fwd_tensor(
+             image_height,                                                      \
+             tile_size,                                                         \
+             tile_offsets,                                                      \
+-            flatten_ids                                                        \
++            flatten_ids,                                                       \
++            depths,                                                            \
++            depth_thres,                                                       \
++            radius_thres                                                       \
+         );
+ 
+     // TODO: an optimization can be done by passing the actual number of
+@@ -351,4 +393,4 @@ rasterize_to_pixels_fwd_tensor(
+     }
+ }
+ 
+-} // namespace gsplat
+\ No newline at end of file
++} // namespace gsplat
+diff --git a/gsplat/cuda/include/bindings.h b/gsplat/cuda/include/bindings.h
+index 66f7a25..a299064 100644
+--- a/gsplat/cuda/include/bindings.h
++++ b/gsplat/cuda/include/bindings.h
+@@ -180,9 +180,11 @@ rasterize_to_pixels_fwd_tensor(
+     const uint32_t tile_size,
+     // intersections
+     const torch::Tensor &tile_offsets, // [C, tile_height, tile_width]
+-    const torch::Tensor &flatten_ids   // [n_isects]
++    const torch::Tensor &flatten_ids,   // [n_isects]
++    const torch::Tensor &depths,   // [C, N]
++    const float depth_thres,
++    const float radius_thres
+ );
+-
+ std::tuple<
+     torch::Tensor,
+     torch::Tensor,
+@@ -204,6 +206,7 @@ rasterize_to_pixels_bwd_tensor(
+     // intersections
+     const torch::Tensor &tile_offsets, // [C, tile_height, tile_width]
+     const torch::Tensor &flatten_ids,  // [n_isects]
++    const float radius_thres, // [1]
+     // forward outputs
+     const torch::Tensor &render_alphas, // [C, image_height, image_width, 1]
+     const torch::Tensor &last_ids,      // [C, image_height, image_width]
+@@ -230,7 +233,6 @@ std::tuple<torch::Tensor, torch::Tensor> rasterize_to_indices_in_range_tensor(
+     const torch::Tensor &tile_offsets, // [C, tile_height, tile_width]
+     const torch::Tensor &flatten_ids   // [n_isects]
+ );
+-
+ torch::Tensor compute_sh_fwd_tensor(
+     const uint32_t degrees_to_use,
+     const torch::Tensor &dirs,              // [..., 3]
+diff --git a/gsplat/rendering.py b/gsplat/rendering.py
+index e725360..6431e1d 100644
+--- a/gsplat/rendering.py
++++ b/gsplat/rendering.py
+@@ -1,5 +1,6 @@
+ import math
+ from typing import Dict, Optional, Tuple
++# import copy
+ 
+ import torch
+ import torch.distributed
+@@ -29,12 +30,14 @@ def rasterization(
+     means: Tensor,  # [N, 3]
+     quats: Tensor,  # [N, 4]
+     scales: Tensor,  # [N, 3]
+-    opacities: Tensor,  # [N]
++    opacities: Tensor,  # [N] or [C, N]
+     colors: Tensor,  # [(C,) N, D] or [(C,) N, K, 3]
+     viewmats: Tensor,  # [C, 4, 4]
+     Ks: Tensor,  # [C, 3, 3]
+     width: int,
+     height: int,
++    depth_thres: float = 1e10,
++    radius_thres: float = 1e10,
+     near_plane: float = 0.01,
+     far_plane: float = 1e10,
+     radius_clip: float = 0.0,
+@@ -236,7 +239,7 @@ def rasterization(
+         # convert covars from 3x3 matrix to upper-triangular 6D vector
+         tri_indices = ([0, 0, 0, 1, 1, 2], [0, 1, 2, 1, 2, 2])
+         covars = covars[..., tri_indices[0], tri_indices[1]]
+-    assert opacities.shape == (N,), opacities.shape
++    assert opacities.shape == (N,) or opacities.shape == (C, N), opacities.shape
+     assert viewmats.shape == (C, 4, 4), viewmats.shape
+     assert Ks.shape == (C, 3, 3), Ks.shape
+     assert render_mode in ["RGB", "D", "ED", "RGB+D", "RGB+ED"], render_mode
+@@ -328,7 +331,8 @@ def rasterization(
+     else:
+         # The results are with shape [C, N, ...]. Only the elements with radii > 0 are valid.
+         radii, means2d, depths, conics, compensations = proj_results
+-        opacities = opacities.repeat(C, 1)  # [C, N]
++        if len(opacities.shape) == 1:
++            opacities = opacities.repeat(C, 1)  # [C, N]
+         camera_ids, gaussian_ids = None, None
+ 
+     if compensations is not None:
+@@ -524,6 +528,7 @@ def rasterization(
+         }
+     )
+ 
++    depths_no_grad = depths.clone().detach()
+     # print("rank", world_rank, "Before rasterize_to_pixels")
+     if colors.shape[-1] > channel_chunk:
+         # slice into chunks
+@@ -546,6 +551,9 @@ def rasterization(
+                 tile_size,
+                 isect_offsets,
+                 flatten_ids,
++                depths=depths_no_grad,
++                depth_thres=depth_thres,
++                radius_thres=radius_thres,
+                 backgrounds=backgrounds_chunk,
+                 packed=packed,
+                 absgrad=absgrad,
+@@ -565,6 +573,9 @@ def rasterization(
+             tile_size,
+             isect_offsets,
+             flatten_ids,
++            depths=depths_no_grad,
++            depth_thres=depth_thres,
++            radius_thres=radius_thres,
+             backgrounds=backgrounds,
+             packed=packed,
+             absgrad=absgrad,
+@@ -745,6 +756,9 @@ def _rasterization(
+                 tile_size,
+                 isect_offsets,
+                 flatten_ids,
++                depths=depths,
++                depth_thres=depth_thres,
++                radius_thres=radius_thres,
+                 backgrounds=backgrounds_chunk,
+                 batch_per_iter=batch_per_iter,
+             )
+@@ -763,6 +777,9 @@ def _rasterization(
+             tile_size,
+             isect_offsets,
+             flatten_ids,
++            depths=depths,
++            depth_thres=depth_thres,
++            radius_thres=radius_thres,
+             backgrounds=backgrounds,
+             batch_per_iter=batch_per_iter,
+         )
+diff --git a/gsplat/version.py b/gsplat/version.py
+index 3e8d9f9..5becc17 100644
+--- a/gsplat/version.py
++++ b/gsplat/version.py
+@@ -1 +1 @@
+-__version__ = "1.4.0"
++__version__ = "1.0.0"
+diff --git a/setup.py b/setup.py
+index dbb14b4..adb0e4c 100644
+--- a/setup.py
++++ b/setup.py
+@@ -10,7 +10,7 @@ from setuptools import find_packages, setup
+ __version__ = None
+ exec(open("gsplat/version.py", "r").read())
+ 
+-URL = "https://github.com/nerfstudio-project/gsplat"
++URL = "https://ghe.oculus-rep.com/recasens/gsplat"
+ 
+ BUILD_NO_CUDA = os.getenv("BUILD_NO_CUDA", "0") == "1"
+ WITH_SYMBOLS = os.getenv("WITH_SYMBOLS", "0") == "1"
+diff --git a/tests/test_2dgs.py b/tests/test_2dgs.py
+index 9956fb4..770f500 100644
+--- a/tests/test_2dgs.py
++++ b/tests/test_2dgs.py
+@@ -30,6 +30,7 @@ def test_data():
+     Ks = torch.tensor(
+         [[fx, 0.0, cx], [0.0, fy, cy], [0.0, 0.0, 1.0]], device=device
+     ).reshape(1, 3, 3)
++    depth_thres = 1e10
+     return {
+         "means": means,
+         "quats": quats,
+@@ -40,6 +41,7 @@ def test_data():
+         "Ks": Ks,
+         "width": W,
+         "height": H,
++        'depth_thres': depth_thres,
+     }
+ 
+ 
+diff --git a/tests/test_basic.py b/tests/test_basic.py
+index 30dc277..f012b2c 100644
+--- a/tests/test_basic.py
++++ b/tests/test_basic.py
+@@ -494,6 +494,8 @@ def test_rasterize_to_pixels(test_data, channels: int):
+     scales = test_data["scales"] * 0.1
+     means = test_data["means"]
+     opacities = test_data["opacities"]
++    depth_thres = test_data["depth_thres"]
++    radius_thres = test_data["radius_thres"]
+     C = len(Ks)
+     colors = torch.randn(C, len(means), channels, device=device)
+     backgrounds = torch.rand((C, colors.shape[-1]), device=device)
+@@ -532,6 +534,8 @@ def test_rasterize_to_pixels(test_data, channels: int):
+         tile_size,
+         isect_offsets,
+         flatten_ids,
++        depth_thres=depth_thres,
++        radius_thres=radius_thres,
+         backgrounds=backgrounds,
+     )
+     _render_colors, _render_alphas = _rasterize_to_pixels(
+@@ -544,6 +548,8 @@ def test_rasterize_to_pixels(test_data, channels: int):
+         tile_size,
+         isect_offsets,
+         flatten_ids,
++        depth_thres=depth_thres,
++        radius_thres=radius_thres,
+         backgrounds=backgrounds,
+     )
+     torch.testing.assert_close(render_colors, _render_colors)

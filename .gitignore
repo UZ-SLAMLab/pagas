@@ -1,0 +1,33 @@
+# License: CC BY-NC 4.0 - see /LICENSE
+# byte-compiled / optimized / dll files
+__pycache__/
+*/__pycache__
+*.py[cod]
+*$py.class
+.DS_Store
+*/DS_Store
+._.DS_Store
+
+# pyenv
+.python-version
+
+# distribution / packaging
+*.egg-info/
+
+# environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# local repository
+results/
+thirdparty/**
+!thirdparty/__init__.py
+!thirdparty/gsplat.patch
+assets/*
+!assets/1dof.png
+.vscode/

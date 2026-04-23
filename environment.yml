@@ -1,0 +1,12 @@
+# License: CC BY-NC 4.0 - see /LICENSE
+name: pagas
+channels:
+- conda-forge
+- nvidia
+- pytorch
+dependencies:
+- python=3.10
+- pip
+- tensorboard  # for visualization
+- pip:
+  - -r requirements.txt
