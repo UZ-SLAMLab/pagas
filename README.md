@@ -1,5 +1,6 @@
 <div align="center">
 <h1>PAGaS: Pixel-Aligned 1DoF Gaussian Splatting for Depth Refinement</h1>
+<a href="#"><img src="https://img.shields.io/badge/CVPR_2026-3DMV-000000?labelColor=000000" alt="CVPR 2026 3DMV"></a>
 
 <!-- <a href=""><img src="" alt="arXiv"></a> -->
 <a href="https://davidrecasens.github.io/pagas/"><img src="https://img.shields.io/badge/Project_Page-green" alt="Project Page"></a>
@@ -12,6 +13,8 @@
 
 <p align="center">
   <img src="assets/1dof.png" width="540">
+  <br>
+  <em>Instead of optimizing a free 3D Gaussian, PAGaS makes each pixel's Gaussian depth-dependent: its 3D position, size, and orientation are derived from depth, while color and opacity are fixed, leaving the depth parameter as the sole degree of freedom.</em>
 </p>
 
 ### Table of Contents
