@@ -3,7 +3,7 @@
 
 <!-- <a href=""><img src="" alt="arXiv"></a> -->
 <a href="https://pagas-paper.github.io/"><img src="https://img.shields.io/badge/Project_Page-green" alt="Project Page"></a>
-<a href="#"><img src="https://img.shields.io/badge/CVPR_2026-3DMV-000000?labelColor=000000" alt="CVPR 2026 3DMV"></a>
+<a href="https://3dmv.org/2026/"><img src="https://img.shields.io/badge/CVPR_2026-3DMV-000000?labelColor=000000" alt="CVPR 2026 3DMV"></a>
 
 **[University of Zaragoza<sup>1</sup>](https://ropert.i3a.es/)**
 
