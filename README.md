@@ -421,5 +421,13 @@ Evaluation scripts for DTU and TnT dataset are based on [DTUeval-python](https:/
 
 ## Citation
 ```bibtex
-soon...
+@misc{recasens2026pagaspixelaligned1dofgaussian,
+      title={PAGaS: Pixel-Aligned 1DoF Gaussian Splatting for Depth Refinement}, 
+      author={David Recasens and Robert Maier and Aljaz Bozic and Stephane Grabli and Javier Civera and Tony Tung and Edmond Boyer},
+      year={2026},
+      eprint={2604.22129},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2604.22129}, 
+}
 ```
