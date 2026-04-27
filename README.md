@@ -28,7 +28,7 @@
 
 Clone the repository, create a conda environment on Linux, and install the dependencies:
 ```bash
-git clone https://.../pagas.git
+git clone https://github.com/UZ-SLAMLab/pagas.git
 cd pagas
 conda env create --file environment.yml
 conda activate pagas
