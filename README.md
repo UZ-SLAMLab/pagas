@@ -21,6 +21,8 @@
 - [⚙️ Setup](#setup)
 - [📷 Run on custom data](#-run-on-custom-data)
 - [📊 Evaluation](#-evaluation)
+- [🙏 Acknowledgements](#acknowledgements)
+- [🥺 Citation](#citation)
 
 ## ⚙️ Setup <a name="setup"></a>
 
@@ -415,11 +417,11 @@ Then run the PAGaS refinement and evaluation, giving the conda environment name 
 ./eval.sh --path_DTU=/path/to/DTU --path_DTU_gt=/path/to/MVSData --path_TNT=/path/to/TNT --conda_env_tnt=2dgs
 ```
 
-## Acknowledgements
+## 🙏 Acknowledgements
 Our Occlusion-Aware 3DGS Rasterizer is built on top of [Gsplat](https://github.com/nerfstudio-project/gsplat).
 Evaluation scripts for DTU and TnT dataset are based on [DTUeval-python](https://github.com/jzhangbs/DTUeval-python) and [TanksAndTemples](https://github.com/isl-org/TanksAndTemples/tree/master/python_toolbox/evaluation) respectively. We thank all the authors for their great work. 
 
-## Citation
+## 🥺 Citation
 ```bibtex
 @misc{recasens2026pagaspixelaligned1dofgaussian,
       title={PAGaS: Pixel-Aligned 1DoF Gaussian Splatting for Depth Refinement}, 
